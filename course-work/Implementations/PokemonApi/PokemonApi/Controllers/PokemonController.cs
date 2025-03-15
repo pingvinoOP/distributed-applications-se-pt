@@ -43,9 +43,60 @@ public class PokemonController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreatePokemon([FromBody] PokemonDto dto)
     {
-        var pokemon = new Pokemon { Name = dto.Name, HP = dto.HP, Attack = dto.Attack, Defense = dto.Defense, Speed = dto.Speed, CreatedDate = dto.CreatedDate, PokemonTypeId = dto.PokemonTypeId };
+        var pokemon = new Pokemon
+        {
+            Name = dto.Name,
+            HP = dto.HP,
+            Attack = dto.Attack,
+            Defense = dto.Defense,
+            Speed = dto.Speed,
+            CreatedDate = dto.CreatedDate,
+            PokemonTypeId = dto.PokemonTypeId
+        };
+
         _context.Pokemon.Add(pokemon);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetPokemon), new { id = pokemon.Id }, pokemon);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdatePokemon(int id, [FromBody] PokemonDto dto)
+    {
+        if (id != dto.Id)
+        {
+            return BadRequest("ID mismatch.");
+        }
+
+        var existingPokemon = await _context.Pokemon.FindAsync(id);
+        if (existingPokemon == null)
+        {
+            return NotFound("Pokemon not found.");
+        }
+
+        existingPokemon.Name = dto.Name;
+        existingPokemon.HP = dto.HP;
+        existingPokemon.Attack = dto.Attack;
+        existingPokemon.Defense = dto.Defense;
+        existingPokemon.Speed = dto.Speed;
+        existingPokemon.PokemonTypeId = dto.PokemonTypeId;
+
+        _context.Pokemon.Update(existingPokemon);
+        await _context.SaveChangesAsync();
+
+        return NoContent(); 
+    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeletePokemon(int id)
+    {
+        var pokemon = await _context.Pokemon.FindAsync(id);
+        if (pokemon == null)
+        {
+            return NotFound("Pokemon not found.");
+        }
+
+        _context.Pokemon.Remove(pokemon);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }
